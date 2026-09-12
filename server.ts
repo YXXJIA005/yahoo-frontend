@@ -2,8 +2,9 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import YahooFinance from 'yahoo-finance2';
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
-const yahooFinance = new YahooFinance({ suppressNotices: ['ripHistorical'] });
+
 
 async function startServer() {
   const app = express();
@@ -80,10 +81,10 @@ async function startServer() {
           }).catch(() => null); // Graceful fallback
           
           // Fetch historical data
-          const historicalPromise = yahooFinance.historical(ticker, { 
+          const historicalPromise = yahooFinance.chart(ticker, { 
             period1: startDate,
             period2: new Date()
-          });
+          }).then(res => res.quotes);
 
           const [quote, modules, historical] = await Promise.all([
             quotePromise, 
