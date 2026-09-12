@@ -2,7 +2,9 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import YahooFinance from 'yahoo-finance2';
-const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+// CJS bundle gets the module namespace here, ESM gets the class itself.
+const YF = ((YahooFinance as any).default ?? YahooFinance) as typeof YahooFinance;
+const yahooFinance = new YF({ suppressNotices: ['yahooSurvey'] });
 
 
 
