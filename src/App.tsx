@@ -7,12 +7,18 @@ import { AdvancedMetrics } from './components/AdvancedMetrics';
 import { StockData, MarketDataResponse } from './types';
 import { Activity, RefreshCcw, AlertTriangle, Settings2, Check, X, Download, Info } from 'lucide-react';
 
-const DEFAULT_WATCHLIST = ['AAPL', 'MSFT', 'NVDA', 'AMZN'];
+const DEFAULT_WATCHLIST = ['AAPL', 'MSFT', 'NVDA', 'SIVE.ST'];
+const WATCHLIST_STORAGE_KEY = 'marketPulse_watchlist';
+const WATCHLIST_WARN_SIZE = 10;
 
 export default function App() {
   const [watchlist, setWatchlist] = useState<string[]>(() => {
-    const saved = localStorage.getItem('marketPulse_watchlist');
-    return saved ? JSON.parse(saved) : DEFAULT_WATCHLIST;
+    try {
+      const saved = JSON.parse(localStorage.getItem(WATCHLIST_STORAGE_KEY) || 'null');
+      return Array.isArray(saved) ? saved : DEFAULT_WATCHLIST;
+    } catch {
+      return DEFAULT_WATCHLIST;
+    }
   });
   const [selectedTicker, setSelectedTicker] = useState<string>(watchlist[0] || 'AAPL');
   
@@ -62,9 +68,9 @@ export default function App() {
       setMarketData(json.data || []);
       
       // Select the first valid ticker if current is not in the list anymore
-      if (!tickersToFetch.includes(selectedTicker) && json.data.length > 0) {
-        setSelectedTicker(json.data[0].ticker);
-      }
+      setSelectedTicker(prev =>
+        tickersToFetch.includes(prev) ? prev : (json.data[0]?.ticker ?? prev)
+      );
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to fetch market data');
@@ -72,23 +78,19 @@ export default function App() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedTicker, config]);
+  }, [config]);
 
   useEffect(() => {
-    localStorage.setItem('marketPulse_watchlist', JSON.stringify(watchlist));
+    localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
+  }, [watchlist]);
+
+  useEffect(() => {
     fetchMarketData(watchlist);
-  }, [watchlist, config, fetchMarketData]);
+  }, [watchlist, fetchMarketData]);
 
   const handleAddTicker = (ticker: string) => {
-    if (!watchlist.includes(ticker)) {
-      setWatchlist(prev => {
-        if (!prev.includes(ticker)) return [...prev, ticker];
-        return prev;
-      });
-      setSelectedTicker(ticker); // Auto-select new ticker
-    } else {
-      setSelectedTicker(ticker);
-    }
+    setWatchlist(prev => prev.includes(ticker) ? prev : [...prev, ticker]);
+    setSelectedTicker(ticker); // Select whichever ticker was just entered
   };
 
   const handleRemoveTicker = (ticker: string) => {
@@ -249,15 +251,15 @@ export default function App() {
           onRemove={handleRemoveTicker}
         />
 
-        {watchlist.length >= 10 && (
-          <div className="mb-6 p-4 bg-amber-950/30 border border-amber-900/50 rounded-xl flex items-start text-amber-400 text-sm">
+        {watchlist.length >= WATCHLIST_WARN_SIZE && (
+          <div role="status" className="mb-6 p-4 bg-amber-950/20 border border-amber-900/50 rounded-xl flex items-start text-amber-400 text-sm">
             <Info size={18} className="mr-3 mt-0.5 flex-shrink-0" />
-            <p><strong>Notice:</strong> Your watchlist has 10 or more tickers. Large watchlists may slow down data loading and increase the risk of API rate limits.</p>
+            <p><strong>Notice:</strong> Your watchlist has {WATCHLIST_WARN_SIZE} or more tickers. Large watchlists may slow down data loading and increase the risk of API rate limits.</p>
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-950/20 border border-rose-900/50 rounded-xl flex items-start text-rose-400 text-sm">
+          <div role="alert" className="mb-6 p-4 bg-rose-950/20 border border-rose-900/50 rounded-xl flex items-start text-rose-400 text-sm">
             <AlertTriangle size={18} className="mr-3 mt-0.5 flex-shrink-0" />
             <p>{error}</p>
           </div>
