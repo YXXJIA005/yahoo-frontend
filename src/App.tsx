@@ -5,7 +5,7 @@ import { StockCharts } from './components/StockCharts';
 import { ComparisonTable } from './components/ComparisonTable';
 import { AdvancedMetrics } from './components/AdvancedMetrics';
 import { StockData, MarketDataResponse } from './types';
-import { Activity, RefreshCcw, AlertTriangle, Settings2, Check, X, Download } from 'lucide-react';
+import { Activity, RefreshCcw, AlertTriangle, Settings2, Check, X, Download, Info } from 'lucide-react';
 
 const DEFAULT_WATCHLIST = ['AAPL', 'MSFT', 'NVDA', 'AMZN'];
 
@@ -248,6 +248,13 @@ export default function App() {
           onAdd={handleAddTicker}
           onRemove={handleRemoveTicker}
         />
+
+        {watchlist.length >= 10 && (
+          <div className="mb-6 p-4 bg-amber-950/30 border border-amber-900/50 rounded-xl flex items-start text-amber-400 text-sm">
+            <Info size={18} className="mr-3 mt-0.5 flex-shrink-0" />
+            <p><strong>Notice:</strong> Your watchlist has 10 or more tickers. Large watchlists may slow down data loading and increase the risk of API rate limits.</p>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 p-4 bg-rose-950/20 border border-rose-900/50 rounded-xl flex items-start text-rose-400 text-sm">
