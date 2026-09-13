@@ -111,10 +111,9 @@ export default function App() {
     // Headers
     const headers = [
       'Ticker', 'Name', 'Price', 'Change %', 'RSI', 'PEG Ratio', 'P/E Ratio',
-      'Gross Margin', 'Operating Margin', 'ROE', 'ROA', 'ROIC',
-      'Operating Cash Flow', 'Free Cash Flow', 'FCF Yield',
-      'Debt/Equity', 'Current Ratio', 'Forward P/E', 'EV/EBITDA',
-      'Fundamental Quality', 'Momentum Alignment', 'Swing Trade Bias'
+      'Gross Margin', 'Operating Margin', 'ROE', 'ROA',
+      'Operating Cash Flow', 'Free Cash Flow',
+      'Debt/Equity', 'Current Ratio', 'Forward P/E', 'EV/EBITDA'
     ];
 
     // Rows
@@ -133,17 +132,12 @@ export default function App() {
         s.operatingMargin,
         s.roe,
         s.roa,
-        s.roic,
         s.operatingCashFlow,
         s.freeCashFlow,
-        s.fcfYield,
         s.debtToEquity,
         s.currentRatio,
         s.forwardPE,
-        s.evToEbitda,
-        `"${s.fundamentalQuality || ''}"`,
-        `"${s.momentumAlignment || ''}"`,
-        `"${s.swingTradeBias || ''}"`
+        s.evToEbitda
       ];
     });
 

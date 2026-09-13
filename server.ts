@@ -151,26 +151,12 @@ async function startServer() {
           const operatingMargin = financialData.operatingMargins || null;
           const roe = financialData.returnOnEquity || null;
           const roa = financialData.returnOnAssets || null;
-          // ROIC is not always present, sometimes we need to calculate or use returnOnEquity as fallback or leave null
-          const roic = financialData.returnOnEquity && financialData.returnOnAssets 
-            ? ((financialData.returnOnEquity + financialData.returnOnAssets) / 2) // Approximation if ROIC missing
-            : null;
-
           const operatingCashFlow = financialData.operatingCashflow || null;
           const freeCashFlow = financialData.freeCashflow || null;
-          const fcfYield = (freeCashFlow && marketCap) ? (freeCashFlow / marketCap) : null;
-          const priceToFcf = (freeCashFlow && marketCap) ? (marketCap / freeCashFlow) : null;
 
           const debtToEquity = financialData.debtToEquity || null;
-          const ebitda = financialData.ebitda || null;
-          const totalDebt = financialData.totalDebt || null;
-          const debtToEbitda = (totalDebt && ebitda) ? (totalDebt / ebitda) : null;
-          
           const currentRatio = financialData.currentRatio || null;
           const quickRatio = financialData.quickRatio || null;
-          
-          // Interest coverage (EBITDA / Interest Expense roughly if we don't have it, but financialData might not have interestExpense. Let's leave null if not available)
-          const interestCoverage = financialData.interestCoverage || null;
 
           const forwardPE = summaryDetail.forwardPE || keyStats.forwardPE || null;
           const evToEbitda = keyStats.enterpriseToEbitda || null;
@@ -182,45 +168,6 @@ async function startServer() {
             priceTo50DayRangePercent = ((quote.regularMarketPrice - rangeLow) / (rangeHigh - rangeLow)) * 100;
           }
 
-          // Tactical Synthesis Heuristics
-          const redFlags = [];
-          const catalysts = [];
-          
-          if (debtToEquity && debtToEquity > 150) redFlags.push("High Debt/Equity Ratio");
-          if (fcfYield && fcfYield < 0) redFlags.push("Negative Free Cash Flow");
-          if (currentRatio && currentRatio < 1.0) redFlags.push("Low Current Ratio (Liquidity Risk)");
-          if (operatingMargin && operatingMargin < 0) redFlags.push("Negative Operating Margins");
-          
-          if (fcfYield && fcfYield > 0.05) catalysts.push("Strong FCF Yield");
-          if (evToEbitda && evToEbitda < 10) catalysts.push("Attractive EV/EBITDA");
-          if (forwardPE && forwardPE < 15 && forwardPE > 0) catalysts.push("Low Forward P/E");
-          if (priceTo50DayRangePercent && priceTo50DayRangePercent > 80 && rsi && rsi < 70) catalysts.push("Bullish Momentum near 50-day highs");
-
-          let fundamentalScore = 0;
-          if (grossMargin > 0.4) fundamentalScore++;
-          if (roe > 0.15) fundamentalScore++;
-          if (fcfYield > 0.03) fundamentalScore++;
-          if (debtToEquity < 100) fundamentalScore++;
-          if (currentRatio > 1.5) fundamentalScore++;
-          
-          let fundamentalQuality = "Average";
-          if (fundamentalScore >= 4) fundamentalQuality = "High Quality";
-          else if (fundamentalScore <= 1) fundamentalQuality = "Weak Fundamentals";
-          else if (fundamentalScore === 3) fundamentalQuality = "Solid";
-
-          let momentumAlignment = "Neutral";
-          if (rsi) {
-            if (rsi > 65) momentumAlignment = "Strongly Overbought / High Momentum";
-            else if (rsi > 55) momentumAlignment = "Bullish";
-            else if (rsi < 35) momentumAlignment = "Strongly Oversold / Bearish";
-            else if (rsi < 45) momentumAlignment = "Bearish";
-          }
-          
-          let swingTradeBias = "Hold";
-          if (rsi && rsi < 40 && fundamentalScore >= 3) swingTradeBias = "Accumulate (Value/Oversold)";
-          else if (rsi && rsi > 60 && fundamentalScore < 2) swingTradeBias = "Trim / Take Profits";
-          else if (priceTo50DayRangePercent && priceTo50DayRangePercent > 80 && rsi && rsi > 50) swingTradeBias = "Breakout Watch / Long";
-          else if (priceTo50DayRangePercent && priceTo50DayRangePercent < 20 && rsi && rsi < 40) swingTradeBias = "Rebound Play (High Risk)";
 
           results.push({
             ticker: quote.symbol,
@@ -247,25 +194,15 @@ async function startServer() {
             operatingMargin,
             roe,
             roa,
-            roic,
             operatingCashFlow,
             freeCashFlow,
-            fcfYield,
-            priceToFcf,
             debtToEquity,
-            debtToEbitda,
             currentRatio,
             quickRatio,
-            interestCoverage,
             forwardPE,
             evToEbitda,
             evToRevenue,
-            priceTo50DayRangePercent,
-            redFlags,
-            catalysts,
-            fundamentalQuality,
-            momentumAlignment,
-            swingTradeBias
+            priceTo50DayRangePercent
           });
 
         } catch (e: any) {
