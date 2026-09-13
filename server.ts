@@ -76,10 +76,10 @@ async function startServer() {
 
       for (const ticker of tickers) {
         try {
-          // Fetch quote & modules (summaryDetail, defaultKeyStatistics, price)
+          // Fetch quote & modules (summaryDetail, defaultKeyStatistics, financialData)
           const quotePromise = yahooFinance.quote(ticker);
           const modulesPromise = yahooFinance.quoteSummary(ticker, {
-             modules: ['summaryDetail', 'defaultKeyStatistics', 'price', 'financialData'] 
+             modules: ['summaryDetail', 'defaultKeyStatistics', 'financialData'] 
           }).catch(() => null); // Graceful fallback
           
           // Fetch historical data
